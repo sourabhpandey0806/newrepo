@@ -1,56 +1,31 @@
 pipeline {
-   agent any
-   environment {
-       registry = '876724398547.dkr.ecr.ap-northeast-1.amazonaws.com/docker_project'
-       
-    }
-   
-   
-    
+    agent any
+
+
     stages {
-        stage('Build') {
+        stage('Clean Compile') {
             steps {
-               // Run Maven on a Unix agent.
-                sh "mvn -Dmaven.test.failure.ignore=true clean package"
-            }
+                
+                // Clean and compile.
+                sh "mvn clean compile"
 
-           post {
-                // If Maven was able to run the tests, even if some of the test
-                // failed, record the test results and archive the jar file.
-                success {
-                    
-                     //step( [ $class: 'JacocoPublisher' ] )
-                    archiveArtifacts '/target/*.war'
-                }
             }
-            
         }
-      
-        stage ('Testing Stage') {
+        
+        stage('Test') {
+            steps {
+                
+                // Test Cases.
+                sh "mvn test"
 
-            steps {
-                withMaven(maven : 'maven') {
-                    sh 'mvn test'
-                }
             }
         }
         
-        stage ('Verify Stage'){
-        
+        stage('Install') {
             steps {
-                withMaven(maven : 'maven') {
-                    sh 'mvn verify'
-                }
+                
+                
+                sh "mvn install"
+
             }
         }
-        
-        stage ('Package Stage'){
-        
-            steps {
-                withMaven(maven : 'maven') {
-                    sh 'mvn install'
-                }
-            }
-        }
-    }
-}
