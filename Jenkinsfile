@@ -1,95 +1,55 @@
 pipeline {
-    agent any
-
-
+   agent any
+   environment {
+       registry = '876724398547.dkr.ecr.ap-northeast-1.amazonaws.com/docker_project'
+       
+    }
+   
+   
+    
     stages {
-        stage('Clean Compile') {
+        stage('Build') {
             steps {
-                
-                // Clean and compile.
-                sh "mvn clean compile"
+               // Run Maven on a Unix agent.
+                sh "mvn -Dmaven.test.failure.ignore=true clean package"
+            }
 
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                
-                // Test Cases.
-                sh "mvn test"
-
-            }
-        }
-        
-        stage('Install') {
-            steps {
-                
-                
-                sh "mvn install"
-
-            }
-        }
-        
-        stage('SonarQube Analysis') {
-            steps {
-                // Analyzing code.
-                withSonarQubeEnv('sonar'){
-                    sh "mvn sonar:sonar"
-                    }
-            }
-        }
-        stage('Artifact'){
-            steps{
-                    archiveArtifacts 'target/*.war'
+           post {
+                // If Maven was able to run the tests, even if some of the test
+                // failed, record the test results and archive the jar file.
+                success {
+                    junit '**/target/surefire-reports/TEST-*.xml'
+                     //step( [ $class: 'JacocoPublisher' ] )
+                    archiveArtifacts 'sourabhproj4/target/*.war'
                 }
             }
             
-        stage ('Artifactory Configuration') {
+        }
+        /*
+        stage ('Testing Stage') {
+
             steps {
-                rtServer (
-                    id: "artifactory", 
-                    url: "http://192.168.56.103:8081/artifactory",
-
-                )
-
-                rtMavenResolver (
-                    id: 'maven-resolver',
-                    serverId: 'artifactory',
-                    releaseRepo: 'libs-release',
-                    snapshotRepo: 'libs-snapshot'
-                )  
-                 
-                rtMavenDeployer (
-                    id: 'maven-deployer',
-                    serverId: 'artifactory',
-                    releaseRepo: 'libs-release-local',
-                    snapshotRepo: 'libs-snapshot-local'
-                )
+                withMaven(maven : 'maven') {
+                    sh 'mvn test'
+                }
             }
         }
         
-        stage('upload') {
-           steps {
-              script { 
-                 def server = Artifactory.server 'artifactory'
-                 def uploadSpec = """{
-                    "files": [{
-                       "pattern": "/var/lib/jenkins/workspace/com.nagarro.pipeline.maven/target/mvc_1.war",
-                       "target": "libs-snapshot-local"
-                    }]
-                 }"""
-
-                 server.upload(uploadSpec) 
-               }
+        stage ('Verify Stage'){
+        
+            steps {
+                withMaven(maven : 'maven') {
+                    sh 'mvn verify'
+                }
             }
         }
-
-        stage ('Publish build info') {
+        
+        stage ('Package Stage'){
+        
             steps {
-                rtPublishBuildInfo (
-                    serverId: "artifactory"
-                )
+                withMaven(maven : 'maven') {
+                    sh 'mvn install'
+                }
             }
         }
     }
-}
