@@ -1,5 +1,9 @@
 pipeline {
   agent any
+  environment {
+   
+    S3_BUCKET_NAME = 'jenkinsartifacts23'
+  }
   
 
   
@@ -15,7 +19,7 @@ pipeline {
       steps {
         // Publish the artifact to S3
      
-          s3Upload(pathStyleAccessEnabled: true, payloadSigningEnabled: true, bucket: "${jenkinsartifacts23}", workingDir: './target', glob: '**/*.war')
+          s3Upload(entries.bucket: true, payloadSigningEnabled: true, bucket: "${S3_BUCKET_NAME}", .: './target': '**/*.war')
         
       }
     }
