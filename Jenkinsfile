@@ -18,8 +18,15 @@ pipeline {
     stage('Publish') {
       steps {
         // Publish the artifact to S3
-     
-         s3Upload(bucket:"jenkinsartifacts23", workingDir:'target', includePathPattern:'**/*.war');
+     s3Upload(
+    bucket: "${S3_BUCKET_NAME}",
+    path: './target/*.war',
+    workingDir: './target',
+    includePathPattern: '**/*.war',
+    pathStyleAccessEnabled: true,
+    payloadSigningEnabled: true,
+    useIAMRole: true
+)
         
       }
     }
