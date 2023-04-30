@@ -23,8 +23,7 @@ pipeline {
     path: './target/*.war',
     workingDir: './target',
     includePathPattern: '**/*.war',
-    pathStyleAccessEnabled: true,
-    payloadSigningEnabled: true,
+    
     useIAMRole: true
 )
         
